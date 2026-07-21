@@ -1,0 +1,35 @@
+#!/usr/bin/env python3
+import json
+import os
+import subprocess
+from pathlib import Path
+
+root = Path(__file__).resolve().parent.parent
+plugin = root / "plugins/kast"
+required = [
+    root / ".agents/plugins/marketplace.json",
+    plugin / ".codex-plugin/plugin.json",
+    plugin / "skills/kast-codex/SKILL.md",
+    plugin / "hooks/hooks.json",
+    plugin / "scripts/kast-codex-hook",
+    plugin / "assets/kast.svg",
+]
+missing = [str(path.relative_to(root)) for path in required if not path.is_file()]
+if missing:
+    raise SystemExit("missing: " + ", ".join(missing))
+
+marketplace = json.loads(required[0].read_text())
+manifest = json.loads(required[1].read_text())
+hooks = json.loads(required[3].read_text())
+if marketplace["name"] != "kast" or marketplace["plugins"][0]["name"] != "kast":
+    raise SystemExit("marketplace must expose kast@kast")
+if manifest["name"] != "kast" or manifest["skills"] != "./skills/":
+    raise SystemExit("plugin manifest must expose the Kast skill")
+if set(hooks["hooks"]) != {"SessionStart", "PostToolUse"}:
+    raise SystemExit("plugin must expose only advisory session and write hooks")
+
+launcher = required[4]
+if not os.access(launcher, os.X_OK):
+    raise SystemExit("launcher is not executable")
+subprocess.run(["sh", "-n", launcher], check=True)
+print("Kast marketplace valid")

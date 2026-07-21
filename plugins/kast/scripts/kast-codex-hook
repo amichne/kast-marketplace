@@ -1,0 +1,18 @@
+#!/bin/sh
+set -eu
+
+if [ "$#" -ne 1 ]; then
+  printf '%s\n' '{"continue":true,"systemMessage":"Kast hook skipped: expected one event."}'
+  exit 0
+fi
+
+kast_binary=$(command -v kast 2>/dev/null || true)
+if [ -z "$kast_binary" ] && [ -n "${HOME:-}" ] && [ -x "$HOME/.local/bin/kast" ]; then
+  kast_binary=$HOME/.local/bin/kast
+fi
+if [ -z "$kast_binary" ] || [ ! -x "$kast_binary" ]; then
+  printf '%s\n' '{"continue":true,"systemMessage":"Kast hook skipped: kast is unavailable; install or update the Kast CLI."}'
+  exit 0
+fi
+
+exec "$kast_binary" developer codex hook "$1"
