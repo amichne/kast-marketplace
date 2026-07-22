@@ -1,0 +1,43 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "hooks": [
+          {
+            "command": "\"$PLUGIN_ROOT/hooks/kast-codex-hook\" post-tool-use",
+            "statusMessage": "Checking changed Kotlin files with Kast",
+            "timeout": 70,
+            "type": "command"
+          }
+        ],
+        "matcher": "apply_patch|Edit|Write"
+      }
+    ],
+    "PreToolUse": [
+      {
+        "hooks": [
+          {
+            "command": "\"$PLUGIN_ROOT/hooks/kast-codex-hook\" pre-tool-use",
+            "statusMessage": "Checking for a Kast or Graphify semantic path",
+            "timeout": 10,
+            "type": "command"
+          }
+        ],
+        "matcher": "Bash|Read|apply_patch|Edit|Write|mcp__filesystem__read_file"
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "command": "\"$PLUGIN_ROOT/hooks/kast-codex-hook\" session-start",
+            "statusMessage": "Preparing Kast and background IntelliJ for this worktree",
+            "timeout": 130,
+            "type": "command"
+          }
+        ],
+        "matcher": "startup|resume"
+      }
+    ]
+  }
+}

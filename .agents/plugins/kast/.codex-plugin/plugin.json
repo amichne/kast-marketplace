@@ -1,0 +1,40 @@
+{
+  "author": {
+    "name": "Austin Michne"
+  },
+  "description": "Compiler-backed Kotlin, Gradle, and Graphify semantic operations through Kast.",
+  "hooks": [
+    "./hooks/kast-codex.hooks.json"
+  ],
+  "interface": {
+    "brandColor": "#2563EB",
+    "capabilities": [
+      "Interactive",
+      "Write"
+    ],
+    "category": "Coding",
+    "defaultPrompt": [
+      "Use Kast for this task.",
+      "Review this repo with Kast.",
+      "Show the Kast workflow."
+    ],
+    "developerName": "Austin Michne",
+    "displayName": "Kast",
+    "longDescription": "Compiler-backed Kotlin, Gradle, and Graphify semantic operations through Kast.",
+    "shortDescription": "Compiler-backed Kotlin, Gradle, and Graphify semantic operations thro...",
+    "websiteURL": "https://kast.michne.com/"
+  },
+  "keywords": [
+    "gradle",
+    "graphify",
+    "hooks",
+    "kast",
+    "kotlin",
+    "semantic-analysis",
+    "skills"
+  ],
+  "license": "UNLICENSED",
+  "name": "kast",
+  "skills": "./skills/",
+  "version": "0.2.0"
+}

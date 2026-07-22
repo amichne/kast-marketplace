@@ -1,20 +1,20 @@
 {
-  "name": "kast",
   "interface": {
     "displayName": "Kast"
   },
+  "name": "kast",
   "plugins": [
     {
+      "category": "Coding",
       "name": "kast",
-      "source": {
-        "source": "local",
-        "path": "./plugins/kast"
-      },
       "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
+        "authentication": "ON_INSTALL",
+        "installation": "AVAILABLE"
       },
-      "category": "Productivity"
+      "source": {
+        "path": "./.agents/plugins/kast",
+        "source": "local"
+      }
     }
   ]
 }

@@ -1,0 +1,33 @@
+name: Project adaptable marketplace
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  project:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        harness: [codex, github-copilot]
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v5
+
+      - name: Project source
+        id: projection
+        uses: amichne/intelligence@159ca9a7fa876fdf43f11654ddae4aa2cc02edd9 # v0.2.8
+        with:
+          source: .
+          harness: ${{ matrix.harness }}
+          version: v0.2.8
+
+      - name: Upload projection
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.harness }}-projection
+          path: ${{ steps.projection.outputs.projection-path }}

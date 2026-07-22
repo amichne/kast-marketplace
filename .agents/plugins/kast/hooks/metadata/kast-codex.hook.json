@@ -1,0 +1,29 @@
+{
+  "dependsOn": [
+    {
+      "name": "kast-codex",
+      "path": "skills/kast-codex",
+      "source": {
+        "path": "./",
+        "type": "LOCAL_SOURCE"
+      },
+      "type": "SKILL"
+    },
+    {
+      "name": "kast-graphify",
+      "path": "skills/kast-graphify",
+      "source": {
+        "path": "./",
+        "type": "LOCAL_SOURCE"
+      },
+      "type": "SKILL"
+    }
+  ],
+  "name": "kast-codex",
+  "path": "hooks/kast-codex.hooks.json",
+  "source": {
+    "path": "./",
+    "type": "LOCAL_SOURCE"
+  },
+  "type": "HOOK"
+}

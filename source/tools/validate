@@ -6,14 +6,25 @@ import sys
 import tempfile
 from pathlib import Path
 
-root = Path(__file__).resolve().parent.parent
-plugin = root / "plugins/kast"
+root = Path(__file__).resolve().parents[2]
+source = root / "source"
+plugin = root / ".agents/plugins/kast"
 marketplace_path = root / ".agents/plugins/marketplace.json"
 manifest_path = plugin / ".codex-plugin/plugin.json"
-hooks_path = plugin / "hooks/hooks.json"
-launcher = plugin / "scripts/kast-codex-hook"
+hooks_path = plugin / "hooks/kast-codex.hooks.json"
+launcher = plugin / "hooks/kast-codex-hook"
 required = [
+    source / "adaptable.marketplace.json",
+    source / "plugins/kast/plugin.json",
+    source / "hooks/kast-codex.hook.json",
+    source / "hooks/codex/kast-codex.hooks.json",
+    source / "hooks/kast-codex-hook",
+    source / "skills/kast-codex/SKILL.md",
+    source / "skills/kast-codex/references/lifecycle.md",
+    source / "skills/kast-graphify/SKILL.md",
+    source / "skills/kast-graphify/references/interop.md",
     marketplace_path,
+    root / ".agents/plugins/marketplace-lock.json",
     manifest_path,
     plugin / "skills/kast-codex/SKILL.md",
     plugin / "skills/kast-codex/references/lifecycle.md",
@@ -21,7 +32,6 @@ required = [
     plugin / "skills/kast-graphify/references/interop.md",
     hooks_path,
     launcher,
-    plugin / "assets/kast.svg",
 ]
 missing = [str(path.relative_to(root)) for path in required if not path.is_file()]
 if missing:
@@ -30,12 +40,21 @@ if missing:
 marketplace = json.loads(marketplace_path.read_text())
 manifest = json.loads(manifest_path.read_text())
 hooks = json.loads(hooks_path.read_text())
+adaptable = json.loads((source / "adaptable.marketplace.json").read_text())
+composition = json.loads((source / "plugins/kast/plugin.json").read_text())
+hook_primitive = json.loads((source / "hooks/kast-codex.hook.json").read_text())
+if adaptable["type"] != "MARKETPLACE" or adaptable["plugins"][0]["name"] != "kast":
+    raise SystemExit("adaptable marketplace must expose the Kast composition")
+if composition["metadata"] != {"composition": "referential"}:
+    raise SystemExit("Kast plugin must remain a referential composition")
+if hook_primitive["path"] != "hooks/codex/kast-codex.hooks.json":
+    raise SystemExit("Kast hook primitive must point at the Codex adapter")
 if marketplace["name"] != "kast" or marketplace["plugins"][0]["name"] != "kast":
     raise SystemExit("marketplace must expose kast@kast")
 if (
     manifest["name"] != "kast"
     or manifest["skills"] != "./skills/"
-    or manifest["hooks"] != "./hooks/hooks.json"
+    or manifest["hooks"] != ["./hooks/kast-codex.hooks.json"]
 ):
     raise SystemExit("plugin manifest must expose the Kast skills and hooks")
 if set(hooks["hooks"]) != {"SessionStart", "PreToolUse", "PostToolUse"}:

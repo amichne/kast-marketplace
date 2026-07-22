@@ -1,0 +1,46 @@
+{
+  "type": "PLUGIN",
+  "schemaVersion": 1,
+  "name": "kast",
+  "version": "0.2.0",
+  "description": "Compiler-backed Kotlin, Gradle, and Graphify semantic operations through Kast.",
+  "interface": {
+    "websiteURL": "https://kast.michne.com/"
+  },
+  "skills": [
+    {
+      "type": "SKILL",
+      "source": {
+        "type": "LOCAL_SOURCE",
+        "path": "./"
+      },
+      "path": "skills/kast-codex",
+      "name": "kast-codex"
+    },
+    {
+      "type": "SKILL",
+      "source": {
+        "type": "LOCAL_SOURCE",
+        "path": "./"
+      },
+      "path": "skills/kast-graphify",
+      "name": "kast-graphify"
+    }
+  ],
+  "agents": [],
+  "instructions": [],
+  "hooks": [
+    {
+      "type": "HOOK",
+      "source": {
+        "type": "LOCAL_SOURCE",
+        "path": "./"
+      },
+      "path": "hooks/kast-codex.hook.json",
+      "name": "kast-codex"
+    }
+  ],
+  "metadata": {
+    "composition": "referential"
+  }
+}

@@ -1,0 +1,219 @@
+#!/usr/bin/env python3
+import json
+import os
+import re
+import shutil
+import subprocess
+import sys
+import time
+from pathlib import Path
+
+INSTALL_COMMAND = (
+    '/bin/bash -c "$(curl -fsSL '
+    'https://raw.githubusercontent.com/amichne/kast/main/install.sh)" -- --autostart'
+)
+SEMANTIC_COMMAND = re.compile(r"(?:^|[;&|()\s])(rg|grep|sed|cat|awk|perl|find)(?:\s|$)")
+KOTLIN_PATH = re.compile(r"(?:\.kts?\b|(?:build|settings)\.gradle(?:\.kts)?\b)", re.IGNORECASE)
+
+
+def emit(value: dict) -> None:
+    print(json.dumps(value, separators=(",", ":")))
+
+
+def workspace_root(payload: dict) -> Path:
+    cwd = Path(payload.get("cwd") or os.getcwd()).expanduser().resolve()
+    try:
+        result = subprocess.run(
+            ["git", "-C", str(cwd), "rev-parse", "--show-toplevel"],
+            check=True,
+            capture_output=True,
+            text=True,
+            timeout=3,
+        )
+        return Path(result.stdout.strip()).resolve()
+    except (OSError, subprocess.SubprocessError):
+        return cwd
+
+
+def kotlin_workspace(root: Path) -> bool:
+    if any((root / name).is_file() for name in ("build.gradle.kts", "settings.gradle.kts")):
+        return True
+    try:
+        result = subprocess.run(
+            ["git", "-C", str(root), "ls-files", "*.kt", "*.kts"],
+            check=False,
+            capture_output=True,
+            text=True,
+            timeout=3,
+        )
+        return bool(result.stdout.strip())
+    except (OSError, subprocess.SubprocessError):
+        return False
+
+
+def pre_tool_use(payload: dict) -> dict:
+    root = workspace_root(payload)
+    if not kotlin_workspace(root):
+        return {}
+    tool_name = str(payload.get("tool_name") or payload.get("toolName") or "").lower()
+    tool_input = payload.get("tool_input", payload.get("toolInput", {}))
+    serialized = json.dumps(tool_input, sort_keys=True)
+    lowered = serialized.lower()
+    if "kast agent" in lowered or "graphify " in lowered:
+        return {}
+    manual = False
+    if tool_name in {"bash", "exec_command"}:
+        command = tool_input.get("cmd") or tool_input.get("command") or serialized
+        manual = SEMANTIC_COMMAND.search(str(command)) is not None
+    elif tool_name in {"read", "mcp__filesystem__read_file"}:
+        manual = KOTLIN_PATH.search(serialized) is not None
+    elif tool_name in {"apply_patch", "applypatch", "edit", "write"}:
+        manual = KOTLIN_PATH.search(serialized) is not None
+    if not manual:
+        return {}
+    return {
+        "systemMessage": (
+            "Kast advisory: this workspace has Kotlin or Gradle sources. Use `kast agent --help` "
+            "before manual discovery or edits, and query `graphify-out/graph.json` with Graphify "
+            "when it exists. Continue manually only when those semantic surfaces do not cover the target."
+        )
+    }
+
+
+def kast_binary() -> str | None:
+    override = os.environ.get("KAST_BINARY")
+    if override is not None:
+        path = Path(override).expanduser()
+        return str(path) if path.is_file() and os.access(path, os.X_OK) else None
+    discovered = shutil.which("kast")
+    if discovered:
+        return discovered
+    for path in (
+        Path.home() / ".local/bin/kast",
+        Path.home() / ".local/share/kast/current/bin/kast",
+    ):
+        if path.is_file() and os.access(path, os.X_OK):
+            return str(path)
+    return None
+
+
+def run_kast(binary: str, event: str, raw_input: bytes) -> str:
+    try:
+        result = subprocess.run(
+            [binary, "developer", "codex", "hook", event],
+            input=raw_input,
+            capture_output=True,
+            timeout=70,
+        )
+    except subprocess.TimeoutExpired:
+        return json.dumps(
+            {"continue": True, "systemMessage": f"Kast {event} hook timed out after 70 seconds."}
+        )
+    output = (result.stdout or result.stderr).decode(errors="replace").strip()
+    if output:
+        try:
+            json.loads(output)
+            return output
+        except json.JSONDecodeError:
+            pass
+    return json.dumps(
+        {
+            "continue": True,
+            "systemMessage": f"Kast {event} hook returned invalid output: {output or 'no output'}",
+        }
+    )
+
+
+def idea_app() -> Path | None:
+    override = os.environ.get("KAST_IDEA_APP")
+    candidates = [Path(override).expanduser()] if override else []
+    candidates.extend(
+        [
+            Path.home() / "Applications/IntelliJ IDEA.app",
+            Path("/Applications/IntelliJ IDEA.app"),
+            Path.home() / "Applications/Android Studio.app",
+            Path("/Applications/Android Studio.app"),
+        ]
+    )
+    return next((path for path in candidates if path.is_dir()), None)
+
+
+def open_idea_in_background(root: Path) -> bool:
+    app = idea_app()
+    opener = shutil.which("open")
+    if app is None or opener is None:
+        return False
+    metadata = root / ".kast/setup/workspace.json"
+    previous_mtime = metadata.stat().st_mtime_ns if metadata.exists() else None
+    try:
+        subprocess.run(
+            [opener, "-g", "-j", "-a", str(app), str(root)],
+            check=True,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            timeout=10,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return False
+    deadline = time.monotonic() + 45
+    while time.monotonic() < deadline:
+        if metadata.exists():
+            current_mtime = metadata.stat().st_mtime_ns
+            if previous_mtime is None or current_mtime > previous_mtime:
+                return True
+        time.sleep(1)
+    return False
+
+
+def append_message(output: str, message: str) -> str:
+    try:
+        payload = json.loads(output)
+    except json.JSONDecodeError:
+        payload = {"continue": True}
+    current = payload.get("systemMessage")
+    payload["systemMessage"] = f"{current}\n{message}" if current else message
+    return json.dumps(payload, separators=(",", ":"))
+
+
+def main() -> int:
+    if len(sys.argv) != 2:
+        emit({"continue": True, "systemMessage": "Kast hook skipped: expected one event."})
+        return 0
+    event = sys.argv[1]
+    raw_input = sys.stdin.buffer.read()
+    try:
+        payload = json.loads(raw_input or b"{}")
+    except json.JSONDecodeError:
+        payload = {}
+    if event == "pre-tool-use":
+        emit(pre_tool_use(payload))
+        return 0
+    binary = kast_binary()
+    if binary is None:
+        emit(
+            {
+                "continue": True,
+                "systemMessage": (
+                    "Kast hook skipped: the Kast CLI is unavailable. Install or update Kast with "
+                    f"`{INSTALL_COMMAND}`, then restart IntelliJ and Codex."
+                ),
+            }
+        )
+        return 0
+    output = run_kast(binary, event, raw_input)
+    if event == "session-start" and sys.platform == "darwin" and "MACOS_PLUGIN_WORKSPACE_REQUIRED" in output:
+        root = workspace_root(payload)
+        if open_idea_in_background(root):
+            output = run_kast(binary, event, raw_input)
+        else:
+            output = append_message(
+                output,
+                "No local IntelliJ IDEA or Android Studio instance prepared this worktree. "
+                "Set KAST_IDEA_APP to the installed .app path or reinstall Kast with --autostart.",
+            )
+    print(output)
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

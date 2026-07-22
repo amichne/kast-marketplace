@@ -1,0 +1,74 @@
+{
+  "type": "MARKETPLACE",
+  "schemaVersion": 1,
+  "name": "kast",
+  "owner": {
+    "name": "Austin Michne"
+  },
+  "description": "Kast compiler-backed semantic tooling for Kotlin, Gradle, and Graphify workflows.",
+  "management": {
+    "type": "MANAGEMENT_POLICY",
+    "mode": "CURATED"
+  },
+  "plugins": [
+    {
+      "type": "PLUGIN_ENTRY",
+      "name": "kast",
+      "plugin": {
+        "type": "PLUGIN_REFERENCE",
+        "name": "kast",
+        "source": {
+          "type": "LOCAL_SOURCE",
+          "path": "./plugins/kast"
+        },
+        "version": "0.2.0"
+      },
+      "description": "Compiler-backed Kotlin, Gradle, and Graphify semantic operations through Kast.",
+      "tags": [
+        "graphify",
+        "gradle",
+        "hooks",
+        "kast",
+        "kotlin",
+        "semantic-analysis",
+        "skills"
+      ]
+    }
+  ],
+  "skills": [
+    {
+      "type": "SKILL",
+      "source": {
+        "type": "LOCAL_SOURCE",
+        "path": "./"
+      },
+      "path": "skills/kast-codex",
+      "name": "kast-codex"
+    },
+    {
+      "type": "SKILL",
+      "source": {
+        "type": "LOCAL_SOURCE",
+        "path": "./"
+      },
+      "path": "skills/kast-graphify",
+      "name": "kast-graphify"
+    }
+  ],
+  "agents": [],
+  "instructions": [],
+  "hooks": [
+    {
+      "type": "HOOK",
+      "source": {
+        "type": "LOCAL_SOURCE",
+        "path": "./"
+      },
+      "path": "hooks/kast-codex.hook.json",
+      "name": "kast-codex"
+    }
+  ],
+  "metadata": {
+    "exposurePolicy": "project-agnostic-primitives"
+  }
+}

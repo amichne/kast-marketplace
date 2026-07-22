@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"$PLUGIN_ROOT/scripts/kast-codex-hook\" session-start",
+            "command": "hooks/kast-codex-hook session-start",
             "timeout": 130,
             "statusMessage": "Preparing Kast and background IntelliJ for this worktree"
           }
@@ -19,7 +19,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"$PLUGIN_ROOT/scripts/kast-codex-hook\" pre-tool-use",
+            "command": "hooks/kast-codex-hook pre-tool-use",
             "timeout": 10,
             "statusMessage": "Checking for a Kast or Graphify semantic path"
           }
@@ -32,7 +32,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"$PLUGIN_ROOT/scripts/kast-codex-hook\" post-tool-use",
+            "command": "hooks/kast-codex-hook post-tool-use",
             "timeout": 70,
             "statusMessage": "Checking changed Kotlin files with Kast"
           }

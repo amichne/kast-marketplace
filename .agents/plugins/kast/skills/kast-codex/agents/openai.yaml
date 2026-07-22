@@ -1,0 +1,7 @@
+interface:
+  display_name: "Kast for Codex"
+  short_description: "Run Kotlin, Gradle, and Graphify work through Kast"
+  default_prompt: "Use $kast-codex for compiler-backed Kotlin or Gradle work and $kast-graphify for repository graphs."
+
+policy:
+  allow_implicit_invocation: true
