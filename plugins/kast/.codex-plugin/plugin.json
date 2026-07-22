@@ -1,7 +1,7 @@
 {
   "name": "kast",
-  "version": "0.1.0",
-  "description": "Compiler-backed Kotlin and Gradle semantic operations through Kast.",
+  "version": "0.2.0",
+  "description": "Compiler-backed Kotlin, Gradle, and Graphify semantic operations through Kast.",
   "author": {
     "name": "Austin Michne",
     "email": "austin@michne.com",
@@ -12,15 +12,17 @@
   "license": "MIT",
   "keywords": [
     "codex",
+    "graphify",
     "gradle",
     "kotlin",
     "semantic-analysis"
   ],
   "skills": "./skills/",
+  "hooks": "./hooks/hooks.json",
   "interface": {
     "displayName": "Kast",
     "shortDescription": "Compiler-backed Kotlin and Gradle operations.",
-    "longDescription": "Inspect and change Kotlin or Gradle code through compiler-backed Kast operations.",
+    "longDescription": "Inspect and change Kotlin or Gradle code through compiler-backed Kast operations, then project the built symbol index into Graphify.",
     "developerName": "Austin Michne",
     "category": "Productivity",
     "capabilities": [
@@ -30,7 +32,8 @@
     "websiteURL": "https://kast.michne.com/",
     "defaultPrompt": [
       "Inspect a Kotlin symbol with compiler-backed evidence.",
-      "Apply this Kotlin change and return its terminal diagnostics outcome."
+      "Apply this Kotlin change and return its terminal diagnostics outcome.",
+      "Build or query the repository graph using Kast-backed Kotlin symbols."
     ],
     "composerIcon": "./assets/kast.svg",
     "logo": "./assets/kast.svg",

@@ -2,13 +2,26 @@
   "hooks": {
     "SessionStart": [
       {
-        "matcher": "startup",
+        "matcher": "startup|resume",
         "hooks": [
           {
             "type": "command",
             "command": "\"$PLUGIN_ROOT/scripts/kast-codex-hook\" session-start",
-            "timeout": 70,
-            "statusMessage": "Opening this worktree for Kast"
+            "timeout": 130,
+            "statusMessage": "Preparing Kast and background IntelliJ for this worktree"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash|Read|apply_patch|Edit|Write|mcp__filesystem__read_file",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$PLUGIN_ROOT/scripts/kast-codex-hook\" pre-tool-use",
+            "timeout": 10,
+            "statusMessage": "Checking for a Kast or Graphify semantic path"
           }
         ]
       }

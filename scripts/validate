@@ -2,34 +2,127 @@
 import json
 import os
 import subprocess
+import sys
+import tempfile
 from pathlib import Path
 
 root = Path(__file__).resolve().parent.parent
 plugin = root / "plugins/kast"
+marketplace_path = root / ".agents/plugins/marketplace.json"
+manifest_path = plugin / ".codex-plugin/plugin.json"
+hooks_path = plugin / "hooks/hooks.json"
+launcher = plugin / "scripts/kast-codex-hook"
 required = [
-    root / ".agents/plugins/marketplace.json",
-    plugin / ".codex-plugin/plugin.json",
+    marketplace_path,
+    manifest_path,
     plugin / "skills/kast-codex/SKILL.md",
-    plugin / "hooks/hooks.json",
-    plugin / "scripts/kast-codex-hook",
+    plugin / "skills/kast-codex/references/lifecycle.md",
+    plugin / "skills/kast-graphify/SKILL.md",
+    plugin / "skills/kast-graphify/references/interop.md",
+    hooks_path,
+    launcher,
     plugin / "assets/kast.svg",
 ]
 missing = [str(path.relative_to(root)) for path in required if not path.is_file()]
 if missing:
     raise SystemExit("missing: " + ", ".join(missing))
 
-marketplace = json.loads(required[0].read_text())
-manifest = json.loads(required[1].read_text())
-hooks = json.loads(required[3].read_text())
+marketplace = json.loads(marketplace_path.read_text())
+manifest = json.loads(manifest_path.read_text())
+hooks = json.loads(hooks_path.read_text())
 if marketplace["name"] != "kast" or marketplace["plugins"][0]["name"] != "kast":
     raise SystemExit("marketplace must expose kast@kast")
-if manifest["name"] != "kast" or manifest["skills"] != "./skills/":
-    raise SystemExit("plugin manifest must expose the Kast skill")
-if set(hooks["hooks"]) != {"SessionStart", "PostToolUse"}:
-    raise SystemExit("plugin must expose only advisory session and write hooks")
+if (
+    manifest["name"] != "kast"
+    or manifest["skills"] != "./skills/"
+    or manifest["hooks"] != "./hooks/hooks.json"
+):
+    raise SystemExit("plugin manifest must expose the Kast skills and hooks")
+if set(hooks["hooks"]) != {"SessionStart", "PreToolUse", "PostToolUse"}:
+    raise SystemExit("plugin must expose advisory session, semantic-path, and write hooks")
 
-launcher = required[4]
 if not os.access(launcher, os.X_OK):
     raise SystemExit("launcher is not executable")
-subprocess.run(["sh", "-n", launcher], check=True)
+compile(launcher.read_text(), str(launcher), "exec")
+
+with tempfile.TemporaryDirectory() as scratch:
+    workspace = Path(scratch) / "workspace"
+    workspace.mkdir()
+    (workspace / "build.gradle.kts").write_text("")
+    advisory = subprocess.run(
+        [launcher, "pre-tool-use"],
+        input=json.dumps(
+            {
+                "cwd": str(workspace),
+                "tool_name": "Bash",
+                "tool_input": {"cmd": "rg Widget src"},
+            }
+        ),
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    advisory_payload = json.loads(advisory.stdout)
+    if "kast agent" not in advisory_payload.get("systemMessage", ""):
+        raise SystemExit("pre-tool hook must advise Kast before manual Kotlin discovery")
+    semantic = subprocess.run(
+        [launcher, "pre-tool-use"],
+        input=json.dumps(
+            {
+                "cwd": str(workspace),
+                "tool_name": "Bash",
+                "tool_input": {"cmd": "kast agent symbol --help"},
+            }
+        ),
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    if json.loads(semantic.stdout) != {}:
+        raise SystemExit("pre-tool hook must not advise against Kast or Graphify commands")
+
+    if sys.platform == "darwin":
+        fake_bin = Path(scratch) / "bin"
+        fake_bin.mkdir()
+        fake_kast = fake_bin / "kast"
+        fake_kast.write_text(
+            "#!/bin/sh\n"
+            'if [ -f "$KAST_TEST_ROOT/.kast/setup/workspace.json" ]; then\n'
+            "  printf '%s\\n' '{\"continue\":true,\"systemMessage\":\"ready\"}'\n"
+            "else\n"
+            "  printf '%s\\n' '{\"continue\":true,\"systemMessage\":\"MACOS_PLUGIN_WORKSPACE_REQUIRED\"}'\n"
+            "fi\n"
+        )
+        fake_open = fake_bin / "open"
+        fake_open.write_text(
+            "#!/bin/sh\n"
+            'for argument in "$@"; do workspace="$argument"; done\n'
+            'mkdir -p "$workspace/.kast/setup"\n'
+            'printf "%s\\n" metadata > "$workspace/.kast/setup/workspace.json"\n'
+            'printf "%s\\n" "$*" > "$KAST_TEST_OPEN_LOG"\n'
+        )
+        fake_kast.chmod(0o755)
+        fake_open.chmod(0o755)
+        fake_app = Path(scratch) / "IntelliJ IDEA.app"
+        fake_app.mkdir()
+        open_log = Path(scratch) / "open.log"
+        environment = os.environ | {
+            "PATH": f"{fake_bin}:{os.environ['PATH']}",
+            "KAST_BINARY": str(fake_kast),
+            "KAST_IDEA_APP": str(fake_app),
+            "KAST_TEST_ROOT": str(workspace),
+            "KAST_TEST_OPEN_LOG": str(open_log),
+        }
+        initialized = subprocess.run(
+            [launcher, "session-start"],
+            input=json.dumps({"cwd": str(workspace)}),
+            check=True,
+            capture_output=True,
+            text=True,
+            env=environment,
+        )
+        if json.loads(initialized.stdout).get("systemMessage") != "ready":
+            raise SystemExit("session hook must retry Kast after background IntelliJ initialization")
+        if "-g -j -a" not in open_log.read_text():
+            raise SystemExit("session hook must launch IntelliJ in the background and hidden")
 print("Kast marketplace valid")
