@@ -33,3 +33,4 @@ jobs:
         with:
           name: ${{ matrix.harness }}-projection
           path: ${{ steps.projection.outputs.projection-path }}
+          include-hidden-files: true
