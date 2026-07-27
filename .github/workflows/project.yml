@@ -22,7 +22,7 @@ jobs:
 
       - name: Project source
         id: projection
-        uses: amichne/intelligence@85625153d6ab7efbfed8a23558749ab16393cd7d # v0.2.9
+        uses: amichne/intelligence@159ca9a7fa876fdf43f11654ddae4aa2cc02edd9 # v0.2.8 transport
         with:
           source: .
           harness: ${{ matrix.harness }}
