@@ -13,25 +13,12 @@
         "matcher": "apply_patch|Edit|Write"
       }
     ],
-    "PreToolUse": [
-      {
-        "hooks": [
-          {
-            "command": "\"$PLUGIN_ROOT/hooks/kast-codex-hook\" pre-tool-use",
-            "statusMessage": "Checking for a Kast or Graphify semantic path",
-            "timeout": 10,
-            "type": "command"
-          }
-        ],
-        "matcher": "Bash|Read|apply_patch|Edit|Write|mcp__filesystem__read_file"
-      }
-    ],
     "SessionStart": [
       {
         "hooks": [
           {
             "command": "\"$PLUGIN_ROOT/hooks/kast-codex-hook\" session-start",
-            "statusMessage": "Preparing Kast and background IntelliJ for this worktree",
+            "statusMessage": "Preparing the exact-root Kast runtime",
             "timeout": 130,
             "type": "command"
           }

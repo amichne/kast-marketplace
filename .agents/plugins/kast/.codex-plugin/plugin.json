@@ -2,7 +2,7 @@
   "author": {
     "name": "Austin Michne"
   },
-  "description": "Compiler-backed Kotlin, Gradle, and Graphify semantic operations through Kast.",
+  "description": "Compiler-backed Kotlin and Gradle repository intelligence through Kast.",
   "hooks": [
     "./hooks/kast-codex.hooks.json"
   ],
@@ -20,13 +20,12 @@
     ],
     "developerName": "Austin Michne",
     "displayName": "Kast",
-    "longDescription": "Compiler-backed Kotlin, Gradle, and Graphify semantic operations through Kast.",
-    "shortDescription": "Compiler-backed Kotlin, Gradle, and Graphify semantic operations thro...",
+    "longDescription": "Compiler-backed Kotlin and Gradle repository intelligence through Kast.",
+    "shortDescription": "Compiler-backed Kotlin and Gradle repository intelligence through Kast.",
     "websiteURL": "https://kast.michne.com/"
   },
   "keywords": [
     "gradle",
-    "graphify",
     "hooks",
     "kast",
     "kotlin",
@@ -36,5 +35,5 @@
   "license": "UNLICENSED",
   "name": "kast",
   "skills": "./skills/",
-  "version": "0.2.0"
+  "version": "0.3.0-beta.1"
 }

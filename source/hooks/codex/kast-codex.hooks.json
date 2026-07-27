@@ -8,20 +8,7 @@
             "type": "command",
             "command": "hooks/kast-codex-hook session-start",
             "timeout": 130,
-            "statusMessage": "Preparing Kast and background IntelliJ for this worktree"
-          }
-        ]
-      }
-    ],
-    "PreToolUse": [
-      {
-        "matcher": "Bash|Read|apply_patch|Edit|Write|mcp__filesystem__read_file",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "hooks/kast-codex-hook pre-tool-use",
-            "timeout": 10,
-            "statusMessage": "Checking for a Kast or Graphify semantic path"
+            "statusMessage": "Preparing the exact-root Kast runtime"
           }
         ]
       }

@@ -1,36 +1,29 @@
 {
-  "generatedAt": "2026-07-22T15:45:46-04:00",
+  "generatedAt": "2026-07-22T16:57:32-04:00",
   "plugins": [
     {
       "name": "kast",
       "references": [
         {
           "name": "kast-codex",
-          "sha256": "sha256:aaff8947decd78e7545708e81118804f3d943750da7c8c7fee8a34c0f2fb6777",
+          "sha256": "sha256:a287a4ecf4cc5912dd4062e02e76ca62750b67c48dad96d8e481ffa158dae317",
           "sourcePath": "source/hooks/kast-codex.hook.json",
           "targetPath": "hooks/kast-codex.hooks.json",
           "type": "HOOK"
         },
         {
           "name": "kast-codex",
-          "sha256": "sha256:124aab201dbeeaf21fc144e0836e8dbca0ce2afa1b88c652fd3ea9fe424e6440",
+          "sha256": "sha256:fed47e12cd4d08bddd9a0db8f33949e07047c3ee4eaacd114a24b30b6c43c4c3",
           "sourcePath": "source/skills/kast-codex",
           "targetPath": "skills/kast-codex",
-          "type": "SKILL"
-        },
-        {
-          "name": "kast-graphify",
-          "sha256": "sha256:b0c6761817c94532c089542621ce5713b4b6d06fde8eadb2b9e073e19f71de1b",
-          "sourcePath": "source/skills/kast-graphify",
-          "targetPath": "skills/kast-graphify",
           "type": "SKILL"
         }
       ],
       "sourceManifest": "source/plugins/kast/plugin.json",
-      "version": "0.2.0"
+      "version": "0.3.0-beta.1"
     }
   ],
   "schemaVersion": 1,
-  "sourceSha": "a8f7e48d40e59ccfee99bb5c3ef95880ff16d064",
+  "sourceSha": "52d7c1b4e459a38cf566a7281cb623178aeb4bbf",
   "type": "HYDRATED_MARKETPLACE"
 }

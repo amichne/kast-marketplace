@@ -8,15 +8,6 @@
         "type": "LOCAL_SOURCE"
       },
       "type": "SKILL"
-    },
-    {
-      "name": "kast-graphify",
-      "path": "skills/kast-graphify",
-      "source": {
-        "path": "./",
-        "type": "LOCAL_SOURCE"
-      },
-      "type": "SKILL"
     }
   ],
   "name": "kast-codex",

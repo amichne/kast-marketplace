@@ -15,15 +15,6 @@
       },
       "path": "skills/kast-codex",
       "name": "kast-codex"
-    },
-    {
-      "type": "SKILL",
-      "source": {
-        "type": "LOCAL_SOURCE",
-        "path": "./"
-      },
-      "path": "skills/kast-graphify",
-      "name": "kast-graphify"
     }
   ]
 }

@@ -5,7 +5,7 @@
   "owner": {
     "name": "Austin Michne"
   },
-  "description": "Kast compiler-backed semantic tooling for Kotlin, Gradle, and Graphify workflows.",
+  "description": "Kast compiler-backed repository intelligence for Kotlin and Gradle workflows.",
   "management": {
     "type": "MANAGEMENT_POLICY",
     "mode": "CURATED"
@@ -21,11 +21,10 @@
           "type": "LOCAL_SOURCE",
           "path": "./plugins/kast"
         },
-        "version": "0.2.0"
+        "version": "0.3.0-beta.1"
       },
-      "description": "Compiler-backed Kotlin, Gradle, and Graphify semantic operations through Kast.",
+      "description": "Compiler-backed Kotlin and Gradle repository intelligence through Kast.",
       "tags": [
-        "graphify",
         "gradle",
         "hooks",
         "kast",
@@ -44,15 +43,6 @@
       },
       "path": "skills/kast-codex",
       "name": "kast-codex"
-    },
-    {
-      "type": "SKILL",
-      "source": {
-        "type": "LOCAL_SOURCE",
-        "path": "./"
-      },
-      "path": "skills/kast-graphify",
-      "name": "kast-graphify"
     }
   ],
   "agents": [],
