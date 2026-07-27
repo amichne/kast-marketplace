@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-22T16:57:32-04:00",
+  "generatedAt": "2026-07-26T22:14:10-04:00",
   "plugins": [
     {
       "name": "kast",
@@ -13,7 +13,7 @@
         },
         {
           "name": "kast-codex",
-          "sha256": "sha256:fed47e12cd4d08bddd9a0db8f33949e07047c3ee4eaacd114a24b30b6c43c4c3",
+          "sha256": "sha256:44fce98b3464cb5b279ed13319c4180762cb2aa9830ac8aa18c5efc586d01976",
           "sourcePath": "source/skills/kast-codex",
           "targetPath": "skills/kast-codex",
           "type": "SKILL"
@@ -24,6 +24,6 @@
     }
   ],
   "schemaVersion": 1,
-  "sourceSha": "52d7c1b4e459a38cf566a7281cb623178aeb4bbf",
+  "sourceSha": "280a02cb67c00b0bc758eb62bd2a9c06776240dc",
   "type": "HYDRATED_MARKETPLACE"
 }

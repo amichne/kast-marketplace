@@ -172,6 +172,11 @@ for command in (
 ):
     if command not in readme_text:
         raise SystemExit(f"README must document direct install command: {command}")
+if (
+    'kast developer runtime up --workspace-root "$ROOT" --backend idea --accept-indexing'
+    not in (source / "skills/kast-codex/references/lifecycle.md").read_text()
+):
+    raise SystemExit("Kast lifecycle must document the canonical IDEA startup recipe")
 
 for path in (source_launcher, launcher):
     if not os.access(path, os.X_OK):
@@ -239,6 +244,7 @@ if kast_binary:
     agent_help = help_text("agent")
     graph_help = help_text("agent", "graph")
     repository_help = help_text("agent", "repository")
+    runtime_up_help = help_text("developer", "runtime", "up")
     hook_help = help_text("developer", "codex", "hook")
     if not all(command in agent_help for command in ("graph", "repository")):
         raise SystemExit("Kast agent help must expose graph and repository")
@@ -247,6 +253,14 @@ if kast_binary:
         for operation in ("refresh", "summary", "nodes", "neighbors", "topology", "communities")
     ):
         raise SystemExit("Kast graph help is missing a documented native operation")
+    if not all(
+        recipe in graph_help
+        for recipe in (
+            'kast agent graph --workspace-root "$PWD" --operation summary',
+            'kast agent graph --workspace-root "$PWD" --operation refresh --file-path src/main/kotlin/App.kt',
+        )
+    ):
+        raise SystemExit("Kast graph help is missing a canonical invocation")
     if not all(
         intent in repository_help
         for intent in (
@@ -265,5 +279,11 @@ if kast_binary:
         or "pre-tool-use" in hook_help
     ):
         raise SystemExit("Kast hook help differs from the projected adapter")
+    if (
+        "--accept-indexing" not in runtime_up_help
+        or 'kast developer runtime up --workspace-root "$PWD" --backend idea --accept-indexing'
+        not in runtime_up_help
+    ):
+        raise SystemExit("Kast runtime help is missing the canonical IDEA startup recipe")
 
 print("Kast marketplace valid")

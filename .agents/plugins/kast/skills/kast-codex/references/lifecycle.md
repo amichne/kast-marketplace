@@ -24,7 +24,7 @@ selection, runtime startup, and retry policy. For an explicit manual start:
 
 ```sh
 ROOT="$(git rev-parse --show-toplevel)"
-kast developer runtime up --workspace-root "$ROOT" --backend idea
+kast developer runtime up --workspace-root "$ROOT" --backend idea --accept-indexing
 kast ready --workspace-root "$ROOT" --backend idea --for kotlin
 ```
 
