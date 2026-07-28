@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-26T22:14:10-04:00",
+  "generatedAt": "2026-07-26T23:19:57-04:00",
   "plugins": [
     {
       "name": "kast",
@@ -12,18 +12,25 @@
           "type": "HOOK"
         },
         {
-          "name": "kast-codex",
-          "sha256": "sha256:44fce98b3464cb5b279ed13319c4180762cb2aa9830ac8aa18c5efc586d01976",
-          "sourcePath": "source/skills/kast-codex",
-          "targetPath": "skills/kast-codex",
+          "name": "kast-change",
+          "sha256": "sha256:bca90cf2e847deae737b073faacdddff0f78a4c12ee87d083d6541a12c915064",
+          "sourcePath": "source/skills/kast-change",
+          "targetPath": "skills/kast-change",
+          "type": "SKILL"
+        },
+        {
+          "name": "kast-query",
+          "sha256": "sha256:aca610bd4ebf4a8e23cd50f84f467110aaad4f244f4a24f015bf16bc92e667a4",
+          "sourcePath": "source/skills/kast-query",
+          "targetPath": "skills/kast-query",
           "type": "SKILL"
         }
       ],
       "sourceManifest": "source/plugins/kast/plugin.json",
-      "version": "0.3.0-beta.1"
+      "version": "0.3.0-beta.2"
     }
   ],
   "schemaVersion": 1,
-  "sourceSha": "280a02cb67c00b0bc758eb62bd2a9c06776240dc",
+  "sourceSha": "81821d1acf6be0b1a11fecceb8062974fe9dadb4",
   "type": "HYDRATED_MARKETPLACE"
 }

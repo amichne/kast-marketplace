@@ -1,8 +1,17 @@
 {
   "dependsOn": [
     {
-      "name": "kast-codex",
-      "path": "skills/kast-codex",
+      "name": "kast-query",
+      "path": "skills/kast-query",
+      "source": {
+        "path": "./",
+        "type": "LOCAL_SOURCE"
+      },
+      "type": "SKILL"
+    },
+    {
+      "name": "kast-change",
+      "path": "skills/kast-change",
       "source": {
         "path": "./",
         "type": "LOCAL_SOURCE"

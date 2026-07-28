@@ -1,0 +1,7 @@
+interface:
+  display_name: "Query Kotlin with Kast"
+  short_description: "Read Kotlin and Gradle with compiler evidence"
+  default_prompt: "Use $kast-query to answer this Kotlin repository question with compiler-backed evidence."
+
+policy:
+  allow_implicit_invocation: true

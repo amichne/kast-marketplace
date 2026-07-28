@@ -10,12 +10,21 @@ codex plugin add kast@kast --json
 Start a new Codex thread after installation so the rewritten skills and hooks
 are loaded.
 
-Version `0.3.0-beta.1` requires a compatible Kast beta whose `kast agent --help`
-includes both `repository` and `graph`.
+Version `0.3.0-beta.2` requires Kast `0.17.8` or newer. The launcher fails
+closed on older or unparseable versions rather than invoking an incompatible
+hook.
+
+On a fresh install, run `/hooks` in Codex CLI, inspect the `kast-codex` hook
+definitions, and trust the exact current definitions. Codex skips plugin hooks
+until they are reviewed and trusted, and asks for review again when they change.
 
 The plugin contains:
 
-- `kast-codex` for compiler-backed Kotlin and Gradle repository work.
+- `kast-query` for read-only Kotlin and Gradle discovery.
+- `kast-change` for requested Kotlin mutations and post-change validation.
+
+The two skills own Kotlin and Gradle semantics. Graphify is not a fallback for
+blocked, incomplete, or empty Kast evidence.
 
 The compatible Kast installer also performs these two plugin commands when
 Codex is available.

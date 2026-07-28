@@ -1,0 +1,7 @@
+interface:
+  display_name: "Change Kotlin with Kast"
+  short_description: "Mutate Kotlin with compiler-backed validation"
+  default_prompt: "Use $kast-change to make this Kotlin change with typed mutation and validation evidence."
+
+policy:
+  allow_implicit_invocation: true

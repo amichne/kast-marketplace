@@ -11,7 +11,35 @@ permissions:
   contents: read
 
 jobs:
+  validate:
+    name: Validate source and paired Kast runtime
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v5
+
+      - name: Validate source
+        run: ./source/tools/validate
+
+      - name: Validate paired Kast runtime
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version="$(python3 -c 'import runpy; print(".".join(map(str, runpy.run_path("source/hooks/kast-codex-hook")["MIN_KAST_VERSION"])))')"
+          tag="v${version}"
+          release_dir="${RUNNER_TEMP}/kast-${tag}"
+          mkdir -p "$release_dir"
+          gh release download "$tag" \
+            --repo amichne/kast \
+            --pattern "kast-${tag}-linux-x64.zip" \
+            --dir "$release_dir"
+          unzip -q "$release_dir/kast-${tag}-linux-x64.zip" -d "$release_dir"
+          binary="$release_dir/kast"
+          test -x "$binary"
+          KAST_BINARY="$binary" ./source/tools/validate
+
   project:
+    needs: validate
     runs-on: ubuntu-latest
     strategy:
       matrix:
