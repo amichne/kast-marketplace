@@ -9,10 +9,10 @@ description: Use for read-only Kotlin or Gradle discovery, repository questions,
    directory without `--workspace-root`; reuse its exact `workspaceRoot` as
    `$ROOT` instead of inferring scope from Git. The session hook normally owns
    runtime startup. If it is unavailable, run `kast developer runtime up
-   --workspace-root "$ROOT" --backend idea --accept-indexing`. Then gate
-   compiler-backed work on
-   `kast ready --workspace-root "$ROOT" --backend idea --for kotlin` on macOS;
-   `INDEXING` is not `READY`.
+   --workspace-root "$ROOT" --backend idea --accept-indexing`. Then run `kast
+   --output json status --workspace-root "$ROOT" --backend idea` and require
+   `selected.ready` to be `true` before compiler-backed work; `INDEXING` is not
+   `READY`.
 
 2. Read scoped `kast agent --help`, then choose the narrowest read command:
    `repository` for intent-driven questions, `graph` for persisted topology,
