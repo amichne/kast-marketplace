@@ -10,10 +10,10 @@ description: Use when the user requests a Kotlin or Gradle edit that needs typed
    directory without `--workspace-root`; reuse its exact `workspaceRoot` as
    `$ROOT` instead of inferring scope from Git. The session hook normally owns
    runtime startup. If it is unavailable, run `kast developer runtime up
-   --workspace-root "$ROOT" --backend idea --accept-indexing`. Then gate
-   compiler-backed work on
-   `kast ready --workspace-root "$ROOT" --backend idea --for kotlin` on macOS;
-   `INDEXING` is not `READY`.
+   --workspace-root "$ROOT" --backend idea --accept-indexing`. Then run `kast
+   --output json status --workspace-root "$ROOT" --backend idea` and require
+   `selected.ready` to be `true` before compiler-backed work; `INDEXING` is not
+   `READY`.
 
 2. Read scoped `kast agent --help`. Use `kast agent diagnostics` before and
    after a change. Prefer the typed mutation that matches the requested edit:

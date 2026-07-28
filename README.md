@@ -10,7 +10,7 @@ codex plugin add kast@kast --json
 Start a new Codex thread after installation so the rewritten skills and hooks
 are loaded.
 
-Version `0.3.0-beta.2` requires Kast `0.17.8` or newer. The launcher fails
+Version `0.3.0-beta.3` requires Kast `0.17.8` or newer. The launcher fails
 closed on older or unparseable versions rather than invoking an incompatible
 hook.
 
