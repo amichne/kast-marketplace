@@ -13,8 +13,17 @@
         "type": "LOCAL_SOURCE",
         "path": "./"
       },
-      "path": "skills/kast-codex",
-      "name": "kast-codex"
+      "path": "skills/kast-query",
+      "name": "kast-query"
+    },
+    {
+      "type": "SKILL",
+      "source": {
+        "type": "LOCAL_SOURCE",
+        "path": "./"
+      },
+      "path": "skills/kast-change",
+      "name": "kast-change"
     }
   ]
 }

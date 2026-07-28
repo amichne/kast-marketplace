@@ -1,0 +1,116 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    {
+      "id": "kotlin-query",
+      "prompt": "Which Kotlin callers reach PaymentService.charge?",
+      "expected": {
+        "skills": [
+          "kast-query"
+        ],
+        "graphify": "forbidden"
+      }
+    },
+    {
+      "id": "kotlin-mutation",
+      "prompt": "Rename this Kotlin declaration and prove its callers still compile.",
+      "expected": {
+        "skills": [
+          "kast-change"
+        ],
+        "graphify": "forbidden"
+      }
+    },
+    {
+      "id": "kotlin-blocker",
+      "prompt": "Kast reports incomplete Kotlin coverage; use another graph to finish the answer.",
+      "expected": {
+        "skills": [
+          "kast-query"
+        ],
+        "graphify": "forbidden"
+      }
+    },
+    {
+      "id": "gradle-query",
+      "prompt": "Which Gradle modules and source sets own this Kotlin target?",
+      "expected": {
+        "skills": [
+          "kast-query"
+        ],
+        "graphify": "forbidden"
+      }
+    },
+    {
+      "id": "gradle-mutation",
+      "prompt": "Update this Gradle Kotlin DSL dependency and prove the affected module still builds.",
+      "expected": {
+        "skills": [
+          "kast-change"
+        ],
+        "graphify": "forbidden"
+      }
+    },
+    {
+      "id": "non-kotlin",
+      "prompt": "Map the relationships in this Python package.",
+      "expected": {
+        "skills": [],
+        "graphify": "allowed"
+      }
+    },
+    {
+      "id": "mixed",
+      "prompt": "Trace the Kotlin service and its Python client.",
+      "expected": {
+        "skills": [
+          "kast-query"
+        ],
+        "graphify": "non-kotlin-only"
+      }
+    }
+  ],
+  "observations": [
+    {
+      "caseId": "kotlin-query",
+      "date": "2026-07-28",
+      "surface": "codex-exec",
+      "outcome": {
+        "selected": [
+          "kast-query"
+        ],
+        "excluded": [
+          "graphify"
+        ]
+      }
+    },
+    {
+      "caseId": "kotlin-mutation",
+      "date": "2026-07-28",
+      "surface": "codex-exec",
+      "outcome": {
+        "selected": [
+          "kast-change"
+        ],
+        "excluded": [
+          "graphify",
+          "kast-query"
+        ]
+      }
+    },
+    {
+      "caseId": "non-kotlin",
+      "date": "2026-07-28",
+      "surface": "codex-exec",
+      "outcome": {
+        "selected": [
+          "graphify"
+        ],
+        "excluded": [
+          "kast-query",
+          "kast-change"
+        ]
+      }
+    }
+  ]
+}

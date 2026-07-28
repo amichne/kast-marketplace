@@ -2,6 +2,7 @@
 import hashlib
 import json
 import os
+import runpy
 import subprocess
 import sys
 import tempfile
@@ -17,30 +18,60 @@ manifest_path = plugin / ".codex-plugin/plugin.json"
 hooks_path = plugin / "hooks/kast-codex.hooks.json"
 launcher = plugin / "hooks/kast-codex-hook"
 source_launcher = source / "hooks/kast-codex-hook"
+routing_evals_path = source / "evals/routing.json"
+workflow_path = root / ".github/workflows/project.yml"
 readme = root / "README.md"
 required = [
     readme,
+    workflow_path,
     source / "adaptable.marketplace.json",
     source / "plugins/kast/plugin.json",
     source / "hooks/kast-codex.hook.json",
     source / "hooks/codex/kast-codex.hooks.json",
     source_launcher,
-    source / "skills/kast-codex/SKILL.md",
-    source / "skills/kast-codex/agents/openai.yaml",
-    source / "skills/kast-codex/references/lifecycle.md",
+    source / "skills/kast-query/SKILL.md",
+    source / "skills/kast-query/agents/openai.yaml",
+    source / "skills/kast-change/SKILL.md",
+    source / "skills/kast-change/agents/openai.yaml",
+    routing_evals_path,
     marketplace_path,
     lock_path,
     manifest_path,
     plugin / "hooks/metadata/kast-codex.hook.json",
-    plugin / "skills/kast-codex/SKILL.md",
-    plugin / "skills/kast-codex/agents/openai.yaml",
-    plugin / "skills/kast-codex/references/lifecycle.md",
+    plugin / "skills/kast-query/SKILL.md",
+    plugin / "skills/kast-query/agents/openai.yaml",
+    plugin / "skills/kast-change/SKILL.md",
+    plugin / "skills/kast-change/agents/openai.yaml",
     hooks_path,
     launcher,
 ]
 missing = [str(path.relative_to(root)) for path in required if not path.is_file()]
 if missing:
     raise SystemExit("missing: " + ", ".join(missing))
+
+launcher_contract = runpy.run_path(str(source_launcher))
+minimum_kast_version = launcher_contract.get("MIN_KAST_VERSION")
+version_pattern = launcher_contract.get("VERSION_PATTERN")
+if (
+    not isinstance(minimum_kast_version, tuple)
+    or len(minimum_kast_version) != 3
+    or not all(isinstance(part, int) for part in minimum_kast_version)
+):
+    raise SystemExit("Kast launcher must declare a three-part MIN_KAST_VERSION")
+minimum_kast_version_text = ".".join(map(str, minimum_kast_version))
+for reported_version in (
+    f"kast {minimum_kast_version_text}",
+    f"kast {minimum_kast_version_text}-1-gabc123",
+):
+    if version_pattern is None or version_pattern.fullmatch(reported_version) is None:
+        raise SystemExit(f"Kast launcher must accept its release grammar: {reported_version}")
+for reported_version in (
+    f"kast {minimum_kast_version_text}garbage",
+    f"kast {minimum_kast_version_text}.999",
+    f"kast {minimum_kast_version_text}-rc.1",
+):
+    if version_pattern is not None and version_pattern.fullmatch(reported_version) is not None:
+        raise SystemExit(f"Kast launcher must reject malformed versions: {reported_version}")
 
 
 def source_sha1(directory: Path) -> str:
@@ -64,6 +95,7 @@ hook_primitive = json.loads((source / "hooks/kast-codex.hook.json").read_text())
 projected_hook_primitive = json.loads(
     (plugin / "hooks/metadata/kast-codex.hook.json").read_text()
 )
+routing_evals = json.loads(routing_evals_path.read_text())
 
 entry = adaptable["plugins"][0]
 versions = {
@@ -78,10 +110,13 @@ if adaptable["type"] != "MARKETPLACE" or entry["name"] != "kast":
     raise SystemExit("adaptable marketplace must expose the Kast composition")
 if len(versions) != 1:
     raise SystemExit(f"Kast source and projected versions differ: {sorted(versions)}")
-if [skill["name"] for skill in composition["skills"]] != ["kast-codex"]:
-    raise SystemExit("Kast plugin must expose only the native kast-codex skill")
-if [skill["name"] for skill in adaptable["skills"]] != ["kast-codex"]:
-    raise SystemExit("Kast marketplace must expose only the native kast-codex skill")
+expected_skills = ["kast-query", "kast-change"]
+if [skill["name"] for skill in composition["skills"]] != expected_skills:
+    raise SystemExit("Kast plugin must expose only kast-query and kast-change")
+if [skill["name"] for skill in adaptable["skills"]] != expected_skills:
+    raise SystemExit("Kast marketplace must expose only kast-query and kast-change")
+if composition["instructions"] or adaptable["instructions"]:
+    raise SystemExit("Kast routing must remain skill-owned, not a plugin instruction")
 if composition["metadata"] != {"composition": "referential"}:
     raise SystemExit("Kast plugin must remain a referential composition")
 expected_hook_primitive = {
@@ -113,12 +148,13 @@ for codex_event, kast_event in events.items():
         raise SystemExit(f"projected {codex_event} must invoke {kast_event}")
 
 source_trees = {
-    source / "skills/kast-codex": plugin / "skills/kast-codex",
+    source / "skills/kast-query": plugin / "skills/kast-query",
+    source / "skills/kast-change": plugin / "skills/kast-change",
 }
 if {
     path.name for path in (plugin / "skills").iterdir() if path.is_dir()
-} != {"kast-codex"}:
-    raise SystemExit("projected plugin must expose only the native kast-codex skill")
+} != set(expected_skills):
+    raise SystemExit("projected plugin must expose only kast-query and kast-change")
 for source_tree, projected_tree in source_trees.items():
     source_files = {
         path.relative_to(source_tree): path
@@ -139,7 +175,6 @@ if source_launcher.read_bytes() != launcher.read_bytes():
     raise SystemExit("projected Kast launcher is stale")
 
 forbidden = (
-    "graphify",
     "kast agent graphify",
     "--manifest",
     "--output-file",
@@ -153,7 +188,7 @@ surface_files = {
     source / "adaptable.marketplace.json",
     source / "plugins/kast/plugin.json",
 }
-for directory in (source / "skills/kast-codex", source / "hooks"):
+for directory in (source / "skills/kast-query", source / "skills/kast-change", source / "hooks"):
     for path in directory.rglob("*"):
         if not path.is_file() or "__pycache__" in path.parts:
             continue
@@ -172,11 +207,105 @@ for command in (
 ):
     if command not in readme_text:
         raise SystemExit(f"README must document direct install command: {command}")
-if (
-    'kast developer runtime up --workspace-root "$ROOT" --backend idea --accept-indexing'
-    not in (source / "skills/kast-codex/references/lifecycle.md").read_text()
+if f"`{minimum_kast_version_text}`" not in readme_text:
+    raise SystemExit("README must document the launcher's minimum Kast version")
+workflow_text = workflow_path.read_text()
+for required_workflow_contract in (
+    "./source/tools/validate",
+    "MIN_KAST_VERSION",
+    "gh release download",
+    'kast-${tag}-linux-x64.zip',
+    'KAST_BINARY="$binary" ./source/tools/validate',
+    "needs: validate",
 ):
-    raise SystemExit("Kast lifecycle must document the canonical IDEA startup recipe")
+    if required_workflow_contract not in workflow_text:
+        raise SystemExit(
+            f"project workflow must retain paired runtime validation: {required_workflow_contract}"
+        )
+if [dependency["name"] for dependency in hook_primitive.get("dependsOn", [])] != expected_skills:
+    raise SystemExit("Kast hook must depend on both visible workflows")
+
+query_text = (source / "skills/kast-query/SKILL.md").read_text()
+root_discovery = "kast --output json"
+runtime_start = (
+    'kast developer runtime up --workspace-root "$ROOT" '
+    "--backend idea --accept-indexing"
+)
+runtime_ready = (
+    'kast ready --workspace-root "$ROOT" --backend idea --for kotlin'
+)
+for skill_name in expected_skills:
+    skill_text = (source / f"skills/{skill_name}/SKILL.md").read_text()
+    skill_contract = " ".join(skill_text.split())
+    if (
+        root_discovery not in skill_contract
+        or runtime_start not in skill_contract
+        or runtime_ready not in skill_contract
+    ):
+        raise SystemExit(
+            f"{skill_name} must discover exact scope and work without the optional session hook"
+        )
+for mutation in (
+    "kast agent rename",
+    "kast agent add-file",
+    "kast agent add-declaration",
+    "kast agent add-implementation",
+    "kast agent add-statement",
+    "kast agent replace-declaration",
+):
+    if mutation in query_text:
+        raise SystemExit(f"kast-query must remain read-only: {mutation}")
+
+expected_routing = {
+    "kotlin-query": {"skills": ["kast-query"], "graphify": "forbidden"},
+    "kotlin-mutation": {"skills": ["kast-change"], "graphify": "forbidden"},
+    "gradle-query": {"skills": ["kast-query"], "graphify": "forbidden"},
+    "gradle-mutation": {"skills": ["kast-change"], "graphify": "forbidden"},
+    "kotlin-blocker": {"skills": ["kast-query"], "graphify": "forbidden"},
+    "non-kotlin": {"skills": [], "graphify": "allowed"},
+    "mixed": {"skills": ["kast-query"], "graphify": "non-kotlin-only"},
+}
+if routing_evals.get("schemaVersion") != 1 or not isinstance(
+    routing_evals.get("cases"), list
+):
+    raise SystemExit("routing evals must use schemaVersion 1 with a cases list")
+cases = {case.get("id"): case for case in routing_evals["cases"]}
+if set(cases) != set(expected_routing) or len(cases) != len(routing_evals["cases"]):
+    raise SystemExit("routing evals must cover the seven Kast/Graphify boundaries")
+for case_id, expectation in expected_routing.items():
+    case = cases[case_id]
+    if not isinstance(case.get("prompt"), str) or not case["prompt"].strip():
+        raise SystemExit(f"routing eval {case_id} must include a prompt")
+    if case.get("expected") != expectation:
+        raise SystemExit(f"routing eval {case_id} has the wrong activation contract")
+expected_observations = [
+    {
+        "caseId": "kotlin-query",
+        "date": "2026-07-28",
+        "surface": "codex-exec",
+        "outcome": {"selected": ["kast-query"], "excluded": ["graphify"]},
+    },
+    {
+        "caseId": "kotlin-mutation",
+        "date": "2026-07-28",
+        "surface": "codex-exec",
+        "outcome": {
+            "selected": ["kast-change"],
+            "excluded": ["graphify", "kast-query"],
+        },
+    },
+    {
+        "caseId": "non-kotlin",
+        "date": "2026-07-28",
+        "surface": "codex-exec",
+        "outcome": {
+            "selected": ["graphify"],
+            "excluded": ["kast-query", "kast-change"],
+        },
+    },
+]
+if routing_evals.get("observations") != expected_observations:
+    raise SystemExit("routing evals must retain the representative live routing observations")
 
 for path in (source_launcher, launcher):
     if not os.access(path, os.X_OK):
@@ -188,6 +317,9 @@ with tempfile.TemporaryDirectory() as scratch:
     fake_kast.write_text(
         f"#!{sys.executable}\n"
         "import json, sys\n"
+        "if sys.argv[1:] == ['--version']:\n"
+        f"    print('kast {minimum_kast_version_text}')\n"
+        "    raise SystemExit(0)\n"
         "print(json.dumps({'argv': sys.argv[1:], 'stdin': sys.stdin.read()}))\n"
     )
     fake_kast.chmod(0o755)
@@ -223,6 +355,38 @@ with tempfile.TemporaryDirectory() as scratch:
         not in rejected_payload.get("systemMessage", "")
     ):
         raise SystemExit("unknown hook events must be rejected before invoking Kast")
+    for reported_version in (
+        "kast 0.17.4",
+        f"kast {minimum_kast_version_text}garbage",
+        f"kast {minimum_kast_version_text}.999",
+        f"kast {minimum_kast_version_text}-rc.1",
+        "not-a-version",
+    ):
+        versioned_kast = Path(scratch) / reported_version.replace(" ", "-")
+        versioned_kast.write_text(
+            f"#!{sys.executable}\n"
+            "import sys\n"
+            "if sys.argv[1:] == ['--version']:\n"
+            f"    print({reported_version!r})\n"
+            "    raise SystemExit(0)\n"
+            "raise SystemExit('event must not reach an incompatible Kast')\n"
+        )
+        versioned_kast.chmod(0o755)
+        blocked = subprocess.run(
+            [launcher, "session-start"],
+            input=payload,
+            check=True,
+            capture_output=True,
+            text=True,
+            env=os.environ | {"KAST_BINARY": str(versioned_kast)},
+        )
+        blocked_payload = json.loads(blocked.stdout)
+        if (
+            not blocked_payload.get("continue")
+            or minimum_kast_version_text
+            not in blocked_payload.get("systemMessage", "")
+        ):
+            raise SystemExit("incompatible Kast versions must fail closed in the launcher")
 
 kast_binary = os.environ.get("KAST_BINARY")
 if kast_binary:
@@ -285,5 +449,36 @@ if kast_binary:
         not in runtime_up_help
     ):
         raise SystemExit("Kast runtime help is missing the canonical IDEA startup recipe")
+
+    with tempfile.TemporaryDirectory() as scratch:
+        non_gradle_root = Path(scratch) / "plain"
+        non_gradle_root.mkdir()
+        environment = os.environ | {
+            "KAST_CONFIG_HOME": str(Path(scratch) / "config"),
+            "KAST_BINARY": str(binary),
+        }
+        for event in events.values():
+            try:
+                probe = subprocess.run(
+                    [launcher, event],
+                    input=json.dumps({"cwd": str(non_gradle_root)}) + "\n",
+                    check=False,
+                    capture_output=True,
+                    text=True,
+                    timeout=15,
+                    env=environment,
+                )
+            except subprocess.TimeoutExpired:
+                raise SystemExit(
+                    f"KAST_BINARY Codex {event} timed out outside a Gradle workspace"
+                )
+            try:
+                probe_output = json.loads(probe.stdout)
+            except json.JSONDecodeError:
+                raise SystemExit(f"KAST_BINARY Codex {event} returned invalid JSON")
+            if probe.returncode or probe_output != {}:
+                raise SystemExit(
+                    f"KAST_BINARY Codex {event} must return {{}} outside a Gradle workspace"
+                )
 
 print("Kast marketplace valid")
